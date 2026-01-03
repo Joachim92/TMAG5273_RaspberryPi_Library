@@ -1,14 +1,3 @@
-# from gpiozero import Button
-# from time import sleep
-
-# sensor = Button("GPIO14")
-
-# print("Starting raspberry-gas program...")
-
-# while True:
-#     print(f"Sensor value: {sensor.value}")
-#     sleep(1)
-
 from smbus2 import SMBus, i2c_msg
 import time
 from TMAG5273_defs import *
@@ -106,12 +95,24 @@ class TMAG5273:
             TMAG5273_REG_DEVICE_CONFIG_2 - bit 1-0"""
         if (opMode > TMAG5273_WAKE_UP_AND_SLEEP_MODE):
             raise f"Invalid operating mode: {opMode}"
+
         mode = 0
         with SMBus(1) as bus:
             mode = bus.read_byte_data(i2c_addr, TMAG5273_REG_DEVICE_CONFIG_2)
             mode = TMAG5273.setBitFieldValue(mode, opMode, TMAG5273_OPERATING_MODE_BITS, TMAG5273_OPERATING_MODE_LSB)
-            print(f"Setting operating mode to: {hex(mode)}")
             bus.write_byte_data(i2c_addr, TMAG5273_REG_DEVICE_CONFIG_2, mode)
+            match mode:
+                case 0x0:
+                    mode = "STANDBY_BY_MODE"
+                case 0x1:
+                    mode = "SLEEP_MODE"
+                case 0x2:
+                    mode = "CONTINUOUS_MEASURE_MODE"
+                case 0x3:
+                    mode = "WAKE_UP_AND_SLEEP_MODE"
+                
+            print(f"Operating mode set to: {mode}")
+            
 
 
     def setAngleEn(self, angleEnable):
@@ -192,6 +193,15 @@ class TMAG5273:
 
 
     def getOperatingMode(self):
+        """
+        @brief Returns the operating mode from one of the 4 listed below:
+            0X0 = Stand-by mode (starts new conversion at trigger event)
+            0X1 = Sleep mode
+            0X2 = Continuous measure mode
+            0X3 = Wake-up and sleep mode (W&S Mode)
+            TMAG5273_REG_DEVICE_CONFIG_2 - bit 1-0
+        @return Operating mode: stand-by, sleep, continuous, or wake-up and sleep
+        """
         opMode = 0
         with SMBus(1) as bus:
             opMode = bus.read_byte_data(i2c_addr, TMAG5273_REG_DEVICE_CONFIG_2)
@@ -270,24 +280,10 @@ class TMAG5273:
 
 print("Program started..")
 sensor = TMAG5273()
-sensor.begin()
-while True:
-    magX = sensor.getXData()
-    print(f"magX: {magX}")
-
-# with SMBus(1) as bus:
-    # Read 64 bytes from address 80
+try:
+    sensor.begin()
     # while True:
-    #     msg = i2c_msg.read(0x22, 64)
-    #     bus.i2c_rdwr(msg)
-    #     print(msg)
-    #     time.sleep(1)
-    
-    # # Write a single byte to address 80
-    # msg = i2c_msg.write(80, [65])
-    # bus.i2c_rdwr(msg)
-    
-    # # Write some bytes to address 80
-    # msg = i2c_msg.write(80, [65, 66, 67, 68])
-    # bus.i2c_rdwr(msg)
-
+    #     magX = sensor.getXData()
+    #     print(f"magX: {magX}")
+except KeyboardInterrupt:
+    sensor.setOperatingMode(TMAG5273_STANDBY_BY_MODE)
