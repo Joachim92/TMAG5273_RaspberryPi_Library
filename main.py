@@ -1,6 +1,7 @@
 from smbus2 import SMBus, i2c_msg
 import time
 from TMAG5273_defs import *
+import math
 
 i2c_addr = TMAG5273_I2C_ADDRESS_INITIAL
 
@@ -15,8 +16,8 @@ class TMAG5273:
         self.setOperatingMode(TMAG5273_CONTINUOUS_MEASURE_MODE)
         self.setAngleEn(TMAG5273_NO_ANGLE_CALCULATION)
         self.setLowPower(TMAG5273_LOW_ACTIVE_CURRENT_MODE)
-        self.setXYAxisRange(TMAG5273_RANGE_80MT)
-        self.setZAxisRange(TMAG5273_RANGE_80MT)
+        self.setXYAxisRange(TMAG5273_RANGE_40MT)
+        self.setZAxisRange(TMAG5273_RANGE_40MT)
         self.getError()
         if (self.getLowPower() != TMAG5273_LOW_ACTIVE_CURRENT_MODE or 
             (self.getOperatingMode() != TMAG5273_CONTINUOUS_MEASURE_MODE) or
@@ -267,23 +268,88 @@ class TMAG5273:
             xData = (dataBuffer[0] << 8) | dataBuffer[1]
             range = 40 if self.getXYAxisRange() == 0 else 80
             return self.calculateMagneticField(xData, range)
-            # sfTkError_t readRegister(uint8_t *devReg, 
-            #                           size_t regLength, 
-            #                           uint8_t *data, 
-            #                           size_t numBytes, 
-            #                           size_t &readBytes, 
-            #                           uint32_t read_delay = 0);
-            # readRegister(TMAG5273_REG_X_MSB_RESULT, dataBuffer, 2, nRead)
-            # read_block_data(i2c_addr, register) -> list
-            # read_i2c_block_data(i2c_addr, register, length) -> list
+        
+    
+    def getYData(self):
+        dataBuffer = []
+        with SMBus(1) as bus:
+            dataBuffer = bus.read_i2c_block_data(i2c_addr, TMAG5273_REG_Y_MSB_RESULT, 2)
+            xData = (dataBuffer[0] << 8) | dataBuffer[1]
+            range = 40 if self.getXYAxisRange() == 0 else 80
+            return self.calculateMagneticField(xData, range)
 
+
+    def getZData(self):
+        dataBuffer = []
+        with SMBus(1) as bus:
+            dataBuffer = bus.read_i2c_block_data(i2c_addr, TMAG5273_REG_Z_MSB_RESULT, 2)
+            xData = (dataBuffer[0] << 8) | dataBuffer[1]
+            range = 40 if self.getXYAxisRange() == 0 else 80
+            return self.calculateMagneticField(xData, range)
+    
+    def getNormalizedData(self):
+        """
+            read 200 times
+            sort results
+            get only the mid 20 values
+            return the average of those 20
+        """
+        xData = []
+        yData = []
+        zData = []
+
+        for _ in range(0, 600):
+            xData.append(sensor.getXData())
+            yData.append(sensor.getYData())
+            zData.append(sensor.getZData())
+        
+        xData.sort()
+        yData.sort()
+        zData.sort()
+
+        x = sum(xData[200:400]) / 200
+        y = sum(yData[200:400]) / 200
+        z = sum(zData[200:400]) / 200
+
+        print(f"({x:.1f}, {y:.1f}, {z:.1f})")
+
+
+# sfTkError_t readRegister(uint8_t *devReg, 
+#                           size_t regLength, 
+#                           uint8_t *data, 
+#                           size_t numBytes, 
+#                           size_t &readBytes, 
+#                           uint32_t read_delay = 0);
+# readRegister(TMAG5273_REG_X_MSB_RESULT, dataBuffer, 2, nRead)
+# read_block_data(i2c_addr, register) -> list
+# read_i2c_block_data(i2c_addr, register, length) -> list
+
+def distance_3d(p1, p2):
+    """
+    p1, p2: tuples or lists like (x, y, z)
+    """
+    return math.sqrt(
+        (p2[0] - p1[0])**2 +
+        (p2[1] - p1[1])**2 +
+        (p2[2] - p1[2])**2
+    )
 
 print("Program started..")
 sensor = TMAG5273()
 try:
     sensor.begin()
-    # while True:
-    #     magX = sensor.getXData()
-    #     print(f"magX: {magX}")
+
+    while True:
+        sensor.getNormalizedData()
 except KeyboardInterrupt:
     sensor.setOperatingMode(TMAG5273_STANDBY_BY_MODE)
+
+    # 0  -> x: -76.4, y: -70.5, z: -7.9
+    # 20 -> x: -76.0, y: -2.0, z: -11.6
+    # 30 -> x: -77.0, y: -4.7, z: -9.8
+    # 40 -> x: -78.5, y: -7.1, z: -6.3
+    # 50 -> x: -0.2, y: -8.3, z: -3.1
+    # 60 -> x: -2.1, y: -8.3, z: -78.8
+    # 70 -> x: -3.5, y: -7.2, z: -74.9
+    # 80 -> x: -4.8, y: -4.4, z: -71.1
+    # 95 -> x: -4.2, y: -73.4, z: -70.3
