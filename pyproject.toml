@@ -1,0 +1,4 @@
+[project]
+name = "TMAG5273_RaspberryPi_Library"
+version = "1.0.0"
+description = "Library created to use the magnetic sensor"
