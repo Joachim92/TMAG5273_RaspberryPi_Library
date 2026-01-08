@@ -4,11 +4,6 @@
 This is a Python library for the Texas Instruments TMAG5273 low-power linear 3D Hall-effect sensor with I<sup>2</sup>C interface.
 
 ![GitHub License](https://img.shields.io/github/license/sparkfun/SparkFun_TMAG5273_Arduino_Library)
-![Release](https://img.shields.io/github/v/release/sparkfun/SparkFun_TMAG5273_Arduino_Library)
-![Release Date](https://img.shields.io/github/release-date/sparkfun/SparkFun_TMAG5273_Arduino_Library)
-![Documentation - build](https://img.shields.io/github/actions/workflow/status/sparkfun/SparkFun_TMAG5273_Arduino_Library/build-deploy-ghpages.yml?label=doc%20build)
-[![Compile Test](https://github.com/sparkfun/SparkFun_FPC2534_Arduino_Library/actions/workflows/test-compile-sketch.yml/badge.svg)](https://github.com/sparkfun/SparkFun_TMAG5273_Arduino_Library/actions/workflows/test-compile-sketch.yml)
-![GitHub issues](https://img.shields.io/github/issues/sparkfun/SparkFun_TMAG5273_Arduino_Library)
 
 This Library for the Texas Instruments TMAG5273 linear 3D Hall-effect sensor provides access to the core functionality of the sensor. The sensor itself includes three Hall-effect sensors, providing readings around the X, Y and Z axes of the device.
 
