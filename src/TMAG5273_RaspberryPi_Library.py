@@ -1,4 +1,5 @@
 from smbus2 import SMBus
+import statistics
 from TMAG5273_RaspberryPi_Library_Defs import *
 
 def printOperatingMode(mode):
@@ -460,7 +461,7 @@ class TMAG5273:
         @return Error code (0 is success, negative is failure, positive is warning)
         """
         if (avgMode > TMAG5273_X32_CONVERSION):
-            raise f"Inalid avgMode: {hex(avgMode)}"
+            raise f"Invalid avgMode: {hex(avgMode)}"
 
         mode = 0
         with SMBus(1) as bus:
@@ -468,3 +469,25 @@ class TMAG5273:
             mode = TMAG5273.setBitFieldValue(mode, avgMode, TMAG5273_CONV_AVG_BITS, TMAG5273_CONV_AVG_LSB)
             print(f"Setting conversion average to: {hex(mode)}")
             bus.write_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_DEVICE_CONFIG_1, mode)
+
+    
+    def getNormalizedAngleData(self):
+        data = []
+
+        for _ in range(0, 300):
+            data.append(self.getAngleResult())
+        
+        data.sort()
+        angle = sum(data[100:200]) / 100
+
+        return int(angle)
+
+    
+    # def setMagneticOffsetOne(self, offset):
+    #     mode = 0
+    #     with SMBus(1) as bus:
+    #         mode = bus.read_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_DEVICE_CONFIG_1)
+    #         mode = TMAG5273.setBitFieldValue(mode, offset, TMAG5273)
+    
+
+    # def setMagneticOffsetTwo(self, offset):
