@@ -12,7 +12,7 @@ def printOperatingMode(mode):
                 mode = "CONTINUOUS_MEASURE_MODE"
             case 0x3:
                 mode = "WAKE_UP_AND_SLEEP_MODE"
-        print(f"Operating mode set to: {mode}")
+        # print(f"Operating mode set to: {mode}")
 
 
 class TMAG5273:
@@ -481,13 +481,44 @@ class TMAG5273:
         angle = sum(data[100:200]) / 100
 
         return int(angle)
-
-    
-    # def setMagneticOffsetOne(self, offset):
-    #     mode = 0
-    #     with SMBus(1) as bus:
-    #         mode = bus.read_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_DEVICE_CONFIG_1)
-    #         mode = TMAG5273.setBitFieldValue(mode, offset, TMAG5273)
     
 
-    # def setMagneticOffsetTwo(self, offset):
+    def map_angle_to_level(self, x):
+        points = [
+            (360, 86),
+            (300, 95),
+            (235, 0),
+            (201, 10),
+            (177, 15),
+            (160, 20),
+            (146, 25),
+            (131, 30),
+            (122, 35),
+            (110, 40),
+            (100, 45),
+            (91, 50),
+            (79, 55),
+            (69, 60),
+            (57, 65),
+            (45, 70),
+            (31, 75),
+            (16, 80),
+            (0, 85),
+        ]
+
+        # Clamp to range
+        if x >= points[0][0]:
+            return points[0][1]
+        if x <= points[-1][0]:
+            return points[-1][1]
+
+        # Find segment and interpolate
+        for (x1, y1), (x2, y2) in zip(points, points[1:]):
+            if x1 >= x >= x2:
+                return int(y1 + (y2 - y1) * (x - x1) / (x2 - x1))
+    
+
+    def getGasLevel(self) -> int:
+        angle = self.getNormalizedAngleData()
+        level = self.map_angle_to_level(angle)
+        return level

@@ -39,3 +39,65 @@ python3 examples/Example1_BasicReadings.py
 [SparkFun Qwiic Hall Effect Sensor TMAG5273](https://docs.sparkfun.com/SparkFun_Qwiic_Hall_Effect_Sensor_TMAG5273/introduction/)
 
 
+# How to start redis instance
+```
+docker run --name redis -d -p 6379:6379 -v /home/joaramos/redis-data:/data redis redis-server --save 86400 1 --loglevel warning
+```
+
+# Connect to redis instance
+```
+docker exec -it redis redis-cli
+```
+
+# How to insert into redis using the cli
+```
+JSON.SET measurement:1769228195 $ '{ "date": "23-Jan-2026 22:40:13", "temperature": 23, "level": 70 }'
+
+ZADD measurements 1769228195 measurement:1769228195
+```
+# query redis
+```
+ZRANGEBYSCORE measurements 1706040000 1769228195
+JSON.GET measurement:1706042413
+```
+
+# What I want to know
+- how much gas left
+- when was the last time I filled the tank
+    check the time in which the gasLevel changed from low to high by a lot (more than 10%)
+    I can do this check after every new record is added in the db and update if needed
+- when will I need to refill
+    This is calculated based on the daily/weekly consumption and how much gas is left
+    Whenever a refill is detected, add it to the refills document
+- how much gas I'm consuming per day/week/month
+    This is calculated with the measurements data
+
+# questions I will be able to answer afterwards
+- Am I consuming more gas than the average? By how much?
+- Am I consuming more at certain times?
+- Is it a lot when the boiler is on?
+- Is it a lot when the dryer is on?
+- Is it a lot when the stove is on?
+- Is the gas being consumed when no one is using it?
+
+
+# Data I want to store
+tank: {
+    "name": "house one",
+    "capacity": 300,
+}
+
+consumption: {
+    I don't think this is needed. I can calculate it based on the measurement values
+}
+
+refill: {
+    "time": 1769228195,
+    "liters": 120
+}
+
+measurement {
+  "time": 1769228195, // Stored as a double
+  "temperature": 23,
+  "level": 73,
+}
