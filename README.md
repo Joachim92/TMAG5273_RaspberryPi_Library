@@ -41,7 +41,7 @@ python3 examples/Example1_BasicReadings.py
 
 # How to start redis instance
 ```
-docker run --name redis -d -p 6379:6379 -v /home/joaramos/redis-data:/data redis redis-server --save 86400 1 --loglevel warning
+docker run --name redis -d -p 6379:6379 -v /home/joaramos/redis-data:/data --restart always redis redis-server --save 86400 1 --loglevel warning
 ```
 
 # Connect to redis instance
@@ -52,13 +52,23 @@ docker exec -it redis redis-cli
 # How to insert into redis using the cli
 ```
 JSON.SET measurement:1769228195 $ '{ "date": "23-Jan-2026 22:40:13", "temperature": 23, "level": 70 }'
-
 ZADD measurements 1769228195 measurement:1769228195
 ```
 # query redis
 ```
 ZRANGEBYSCORE measurements 1706040000 1769228195
 JSON.GET measurement:1706042413
+
+measurement_ids = r.zrangebyscore(sorted_set, 0, ts)
+for id in measurement_ids:
+    measurement = r.json().get(id)
+    measurement['time'] = datetime.fromtimestamp(measurement['time']).strftime('%d-%b-%Y %H:%M:%S')
+    print(measurement)
+```
+
+# delete redis
+```
+r.delete(sorted_set)
 ```
 
 # What I want to know
@@ -66,11 +76,11 @@ JSON.GET measurement:1706042413
 - when was the last time I filled the tank
     check the time in which the gasLevel changed from low to high by a lot (more than 10%)
     I can do this check after every new record is added in the db and update if needed
+- how much gas I'm consuming per day/week/month
+    This is calculated with the measurements data
 - when will I need to refill
     This is calculated based on the daily/weekly consumption and how much gas is left
     Whenever a refill is detected, add it to the refills document
-- how much gas I'm consuming per day/week/month
-    This is calculated with the measurements data
 
 # questions I will be able to answer afterwards
 - Am I consuming more gas than the average? By how much?
@@ -93,7 +103,8 @@ consumption: {
 
 refill: {
     "time": 1769228195,
-    "liters": 120
+    "liters": 120,
+    "level": 40,
 }
 
 measurement {

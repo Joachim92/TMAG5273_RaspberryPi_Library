@@ -87,7 +87,7 @@ class TMAG5273:
         with SMBus(1) as bus:
             mode = bus.read_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_SENSOR_CONFIG_1)
             mode = TMAG5273.setBitFieldValue(mode, channel_mode, TMAG5273_CHANNEL_MODE_BITS, TMAG5273_CHANNEL_MODE_LSB)
-            print(f"Setting magnetic channel config to: {hex(mode)}")
+            # print(f"Setting magnetic channel config to: {hex(mode)}")
             bus.write_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_SENSOR_CONFIG_1, mode)
 
 
@@ -105,7 +105,7 @@ class TMAG5273:
         with SMBus(1) as bus:
             mode = bus.read_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_T_CONFIG)
             mode = TMAG5273.setBitFieldValue(mode, temperatureEnable, TMAG5273_TEMPERATURE_BITS, TMAG5273_TEMPERATURE_LSB)
-            print(f"Setting temperature config to: {hex(mode)}")
+            # print(f"Setting temperature config to: {hex(mode)}")
             bus.write_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_T_CONFIG, mode)
 
 
@@ -149,7 +149,7 @@ class TMAG5273:
         with SMBus(1) as bus:
             mode = bus.read_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_SENSOR_CONFIG_2)
             mode = TMAG5273.setBitFieldValue(mode, angleEnable, TMAG5273_ANGLE_CALCULATION_BITS, TMAG5273_ANGLE_CALCULATION_LSB)
-            print(f"Setting angleEnable config to: {hex(mode)}")
+            # print(f"Setting angleEnable config to: {hex(mode)}")
             bus.write_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_SENSOR_CONFIG_2, mode)
 
 
@@ -165,7 +165,7 @@ class TMAG5273:
         with SMBus(1) as bus:
             mode = bus.read_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_DEVICE_CONFIG_2)
             mode = TMAG5273.setBitFieldValue(mode, lpLnMode, TMAG5273_LOW_POWER_BITS, TMAG5273_LOW_POWER_LSB)
-            print(f"Setting low power mode config to: {hex(mode)}")
+            # print(f"Setting low power mode config to: {hex(mode)}")
             bus.write_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_DEVICE_CONFIG_2, mode)
 
 
@@ -184,7 +184,7 @@ class TMAG5273:
         with SMBus(1) as bus:
             mode = bus.read_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_SENSOR_CONFIG_2)
             mode = TMAG5273.setBitFieldValue(mode, xyAxisRange, TMAG5273_XY_RANGE_BITS, TMAG5273_XY_RANGE_LSB)
-            print(f"Setting xyAxisRange config to: {hex(mode)}")
+            # print(f"Setting xyAxisRange config to: {hex(mode)}")
             bus.write_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_SENSOR_CONFIG_2, mode)
 
 
@@ -203,7 +203,7 @@ class TMAG5273:
         with SMBus(1) as bus:
             mode = bus.read_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_SENSOR_CONFIG_2)
             mode = TMAG5273.setBitFieldValue(mode, zAxisRange, TMAG5273_Z_RANGE_BITS, TMAG5273_Z_RANGE_LSB)
-            print(f"Setting zAxisRange config to: {hex(mode)}")
+            # print(f"Setting zAxisRange config to: {hex(mode)}")
             bus.write_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_SENSOR_CONFIG_2, mode)
 
 
@@ -467,7 +467,7 @@ class TMAG5273:
         with SMBus(1) as bus:
             mode = bus.read_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_DEVICE_CONFIG_1)
             mode = TMAG5273.setBitFieldValue(mode, avgMode, TMAG5273_CONV_AVG_BITS, TMAG5273_CONV_AVG_LSB)
-            print(f"Setting conversion average to: {hex(mode)}")
+            # print(f"Setting conversion average to: {hex(mode)}")
             bus.write_byte_data(TMAG5273_I2C_ADDRESS_INITIAL, TMAG5273_REG_DEVICE_CONFIG_1, mode)
 
     

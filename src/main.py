@@ -2,10 +2,10 @@ import time
 import logging
 import redis
 from datetime import datetime
+from enum import Enum
 from TMAG5273_RaspberryPi_Library_Defs import *
 from TMAG5273_RaspberryPi_Library import TMAG5273
 
-# send gasLevel to a redis instance
 
 logging.basicConfig(
     filename="gasLevel.log",
@@ -14,39 +14,85 @@ logging.basicConfig(
     datefmt="%d-%b-%Y %H:%M:%S",
 )
 
+class Period(Enum):
+    SECOND = 1,
+    DAY = 86400,
+    WEEK = 86400*7,
+    MONTH = 86400*30
 
-# sensor = TMAG5273()
-# try:
-#     sensor.begin()
-#     sensor.setConvAvg(TMAG5273_X32_CONVERSION)
-#     sensor.setMagneticChannel(TMAG5273_XYX_ENABLE)
-#     sensor.setAngleEn(TMAG5273_XY_ANGLE_CALCULATION)
+sensor = TMAG5273()
+tank_liters = 300
 
-#     while True:
-#         sensor.setOperatingMode(TMAG5273_CONTINUOUS_MEASURE_MODE)
-#         level = sensor.getGasLevel()
-#         logging.info(f"gasLevel: {level}")
-#         sensor.setOperatingMode(TMAG5273_STANDBY_BY_MODE)
-#         time.sleep(2)
+# redis documents
+measurements_set = "measurements"
+refills_set = "refills"
 
-# except KeyboardInterrupt:
-#     sensor.setOperatingMode(TMAG5273_STANDBY_BY_MODE)
 
-sorted_set = "measurements"
-ts = int(time.time())
-key = f"measurement:{ts}"
+def level_to_liters(level) -> int:
+    return int((level/100) * tank_liters)
 
-r = redis.Redis(host='localhost', port='6379', decode_responses=True)
 
-# r.delete(sorted_set)
-# for i in range(0,10):
-#     r.json().set(f"measurement:{ts+i}", "$", { "time": ts + 86400*i, "temperature": 23, "level": 80-i })
-#     r.zadd(sorted_set, { f"measurement:{ts+i}": ts })
+def is_refill(previous_measurement, current_measurement) -> bool:
+    return current_measurement['level'] > previous_measurement['level'] + 10
 
-measurement_ids = r.zrangebyscore(sorted_set, 1706040000, ts)
-consumption = 0
 
-for id in measurement_ids:
-    measurement = r.json().get(id)
-    measurement['time'] = datetime.fromtimestamp(measurement['time']).strftime('%d-%b-%Y %H:%M:%S')
-    print(measurement)
+def get_refill_liters(previous_measurement, current_measurement) -> int:
+    diff = current_measurement['level'] - previous_measurement['level']
+    return level_to_liters(diff)
+
+
+def get_last_refill(r):
+    latest_refill = r.zrevrange(measurements_set, 0, 0)
+    return latest_refill
+
+
+def calculate_avg_consumption(r, ts, period: Period) -> int:
+    """in liters"""
+    last_refill = get_last_refill(r)
+    start_time = last_refill['time']
+    start_level = last_refill['level']
+    level_diff = start_level - level
+    litters_diff = level_to_liters(level_diff)
+    time_diff_seconds = ts - start_time
+    time_diff_period = int(time_diff_seconds / period)
+    return litters_diff / time_diff_period
+
+
+def when_gas_will_be_empty(ts, liters, consumption_per_second):
+    seconds_left = liters / consumption_per_second
+    empty_time = ts + seconds_left
+    return empty_time
+
+
+try:
+    sensor.begin()
+    sensor.setConvAvg(TMAG5273_X32_CONVERSION)
+    sensor.setMagneticChannel(TMAG5273_XYX_ENABLE)
+    sensor.setAngleEn(TMAG5273_XY_ANGLE_CALCULATION)
+
+    while True:
+        sensor.setOperatingMode(TMAG5273_CONTINUOUS_MEASURE_MODE)
+        level = sensor.getGasLevel()
+        temperature = int(sensor.getTemp())
+        logging.info(f"gasLevel: {level}")
+
+        ts = int(time.time())
+        key = f"measurement:{ts}"
+        r = redis.Redis(host='localhost', port='6379', decode_responses=True)
+        previous_measurement = r.zrevrange(measurements_set, 0, 0)
+        r.json().set(key, "$", { "time": ts, "temperature": temperature, "level": level})
+        current_measurement = r.json().get(key)
+
+        if (is_refill(previous_measurement, current_measurement)):
+            liters = get_refill_liters(previous_measurement, current_measurement)
+            refill_key = f"refill:{ts}"
+            r.json().set(refill_key, "$", { "time": ts, "liters": liters, "level": level })
+            r.zadd(refills_set, { refill_key: ts })
+        
+        r.zadd(measurements_set, { key: ts })
+
+        sensor.setOperatingMode(TMAG5273_STANDBY_BY_MODE)
+        time.sleep(3600)
+
+except KeyboardInterrupt:
+    sensor.setOperatingMode(TMAG5273_STANDBY_BY_MODE)
