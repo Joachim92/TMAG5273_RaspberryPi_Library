@@ -28,6 +28,10 @@ measurements_set = "measurements"
 refills_set = "refills"
 
 
+def double_to_date(time) -> str:
+    return datetime.fromtimestamp(time).strftime('%d-%b-%Y %H:%M:%S')
+
+
 def level_to_liters(level) -> int:
     return int((level/100) * tank_liters)
 
@@ -79,14 +83,15 @@ try:
         ts = int(time.time())
         key = f"measurement:{ts}"
         r = redis.Redis(host='localhost', port='6379', decode_responses=True)
-        previous_measurement = r.zrevrange(measurements_set, 0, 0)
-        r.json().set(key, "$", { "time": ts, "temperature": temperature, "level": level})
+        previous_measurement_key = r.zrevrange(measurements_set, 0, 0)[0]
+        previous_measurement = r.json().get(previous_measurement_key)
+        r.json().set(key, "$", { "time": ts, "time_as_text": double_to_date(ts), "temperature": temperature, "level": level, "liters": level_to_liters(level)})
         current_measurement = r.json().get(key)
 
         if (is_refill(previous_measurement, current_measurement)):
             liters = get_refill_liters(previous_measurement, current_measurement)
             refill_key = f"refill:{ts}"
-            r.json().set(refill_key, "$", { "time": ts, "liters": liters, "level": level })
+            r.json().set(refill_key, "$", { "time": ts, "time_as_text": double_to_date(ts), "liters": liters, "level": level })
             r.zadd(refills_set, { refill_key: ts })
         
         r.zadd(measurements_set, { key: ts })

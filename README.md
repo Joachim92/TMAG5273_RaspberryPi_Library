@@ -54,12 +54,17 @@ docker exec -it redis redis-cli
 JSON.SET measurement:1769228195 $ '{ "date": "23-Jan-2026 22:40:13", "temperature": 23, "level": 70 }'
 ZADD measurements 1769228195 measurement:1769228195
 ```
+
 # query redis
 ```
+// get list of all ids in a collection
+zrevrange refills 0 0
+// get list of measurements_ids between two dates
 ZRANGEBYSCORE measurements 1706040000 1769228195
+// get one specific measurement using its id
 JSON.GET measurement:1706042413
 
-measurement_ids = r.zrangebyscore(sorted_set, 0, ts)
+measurement_ids = r.zrangebyscore(measurements_set, 0, ts)
 for id in measurement_ids:
     measurement = r.json().get(id)
     measurement['time'] = datetime.fromtimestamp(measurement['time']).strftime('%d-%b-%Y %H:%M:%S')
@@ -68,7 +73,8 @@ for id in measurement_ids:
 
 # delete redis
 ```
-r.delete(sorted_set)
+del measurements
+r.delete(measurements_set)
 ```
 
 # What I want to know
@@ -92,23 +98,26 @@ r.delete(sorted_set)
 
 
 # Data I want to store
-tank: {
+tank {
     "name": "house one",
-    "capacity": 300,
+    "capacity_liters": 300,
 }
 
-consumption: {
-    I don't think this is needed. I can calculate it based on the measurement values
-}
+refills [
+    refill {
+        "time": 1769228195,
+        "time_as_text": "20-Jan-2026 10:00:00": 
+        "liters": 120,
+        "level": 40,
+    }
+]
 
-refill: {
-    "time": 1769228195,
-    "liters": 120,
-    "level": 40,
-}
-
-measurement {
-  "time": 1769228195, // Stored as a double
-  "temperature": 23,
-  "level": 73,
-}
+measurements [
+    measurement {
+        "time": 1769228195, // Stored as a double
+        "time_as_text": "20-Jan-2026 10:00:00": 
+        "temperature": 23,
+        "level": 70,
+        "liters": 210
+    }
+]
