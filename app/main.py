@@ -83,16 +83,30 @@ def get_latest_measurement(r):
 
 
 def calculate_avg_consumption(latest_refill, latest_measurement, period: Period) -> int:
-    """in liters"""
+    """in mg"""
     start_time = latest_refill['time']
     start_level = latest_refill['level']
     level_diff = start_level - latest_measurement['level']
     litters_diff = level_to_liters(level_diff)
+    kg_diff = litters_diff * 0.54
     time_diff_seconds = latest_measurement['time'] - start_time
     time_diff_period = int(time_diff_seconds / period.value)
     if time_diff_period == 0:
         return 0
-    return litters_diff / time_diff_period
+    return (kg_diff * 1000 * 1000) / time_diff_period
+
+
+# def calculate_avg_consumption(latest_refill, latest_measurement, period: Period) -> int:
+#     """in mili liters"""
+#     start_time = latest_refill['time']
+#     start_level = latest_refill['level']
+#     level_diff = start_level - latest_measurement['level']
+#     litters_diff = level_to_liters(level_diff)
+#     time_diff_seconds = latest_measurement['time'] - start_time
+#     time_diff_period = int(time_diff_seconds / period.value)
+#     if time_diff_period == 0:
+#         return 0
+#     return (litters_diff * 1000) / time_diff_period
 
 
 def when_gas_will_be_empty(ts, liters, consumption_per_second):

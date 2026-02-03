@@ -132,6 +132,7 @@ measurements [
 
 # How to run the service
 ```
+sudo systemctl status gas-measurement
 sudo systemctl enable gas-measurement
 sudo systemctl start gas-measurement
 sudo systemctl stop gas-measurement
