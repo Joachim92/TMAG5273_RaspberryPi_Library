@@ -36,30 +36,35 @@ def level_to_liters(level) -> int:
     return int((level/100) * tank_liters)
 
 
+def get_previous_measurement(r):
+    measurements = r.zrevrange(measurements_set, 0, 0)
+    if not measurements:
+        return None
+    previous_measurement_key = measurements[0]
+    previous_measurement = r.json().get(previous_measurement_key)
+    return previous_measurement
+
+
 def is_refill(previous_measurement, current_measurement) -> bool:
+    if not previous_measurement:
+        return True
     return current_measurement['level'] > previous_measurement['level'] + 10
 
 
 def get_refill_liters(previous_measurement, current_measurement) -> int:
+    if not previous_measurement:
+        return current_measurement['liters']
     diff = current_measurement['level'] - previous_measurement['level']
     return level_to_liters(diff)
 
 
-def get_last_refill(r):
-    latest_refill = r.zrevrange(measurements_set, 0, 0)
+def get_latest_refill(r):
+    refills = r.zrevrange(refills_set, 0, 0)
+    if not refills:
+        return None
+    latest_refill_key = refills[0]
+    latest_refill = r.json().get(latest_refill_key)
     return latest_refill
-
-
-def calculate_avg_consumption(r, ts, period: Period) -> int:
-    """in liters"""
-    last_refill = get_last_refill(r)
-    start_time = last_refill['time']
-    start_level = last_refill['level']
-    level_diff = start_level - level
-    litters_diff = level_to_liters(level_diff)
-    time_diff_seconds = ts - start_time
-    time_diff_period = int(time_diff_seconds / period)
-    return litters_diff / time_diff_period
 
 
 def when_gas_will_be_empty(ts, liters, consumption_per_second):
@@ -68,6 +73,7 @@ def when_gas_will_be_empty(ts, liters, consumption_per_second):
     return empty_time
 
 
+# main
 try:
     sensor.begin()
     sensor.setConvAvg(TMAG5273_X32_CONVERSION)
@@ -80,11 +86,13 @@ try:
         temperature = int(sensor.getTemp())
         logging.info(f"gasLevel: {level}")
 
-        ts = int(time.time())
-        key = f"measurement:{ts}"
         r = redis.Redis(host='localhost', port='6379', decode_responses=True)
-        previous_measurement_key = r.zrevrange(measurements_set, 0, 0)[0]
-        previous_measurement = r.json().get(previous_measurement_key)
+
+        previous_measurement = get_previous_measurement(r)
+
+        # current measurement
+        ts = time.time()
+        key = f"measurement:{ts}"
         r.json().set(key, "$", { "time": ts, "time_as_text": double_to_date(ts), "temperature": temperature, "level": level, "liters": level_to_liters(level)})
         current_measurement = r.json().get(key)
 
@@ -97,6 +105,7 @@ try:
         r.zadd(measurements_set, { key: ts })
 
         sensor.setOperatingMode(TMAG5273_STANDBY_BY_MODE)
+        r.close()
         time.sleep(3600)
 
 except KeyboardInterrupt:

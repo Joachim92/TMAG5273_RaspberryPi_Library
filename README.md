@@ -41,7 +41,7 @@ python3 examples/Example1_BasicReadings.py
 
 # How to start redis instance
 ```
-docker run --name redis -d -p 6379:6379 -v /home/joaramos/redis-data:/data --restart always redis redis-server --save 86400 1 --loglevel warning
+docker run --name redis -d -p 6379:6379 -v /home/joaramos/redis-data:/data --restart always redis redis-server --save 3600 1 --loglevel warning
 ```
 
 # Connect to redis instance
@@ -58,11 +58,13 @@ ZADD measurements 1769228195 measurement:1769228195
 # query redis
 ```
 // get list of all ids in a collection
-zrevrange refills 0 0
+zrevrange refills 0 -1
 // get list of measurements_ids between two dates
 ZRANGEBYSCORE measurements 1706040000 1769228195
 // get one specific measurement using its id
 JSON.GET measurement:1706042413
+// get the newest element in the collection
+zrevrange refills 0 0
 
 measurement_ids = r.zrangebyscore(measurements_set, 0, ts)
 for id in measurement_ids:
@@ -96,6 +98,12 @@ r.delete(measurements_set)
 - Is it a lot when the stove is on?
 - Is the gas being consumed when no one is using it?
 
+# initial inserts
+JSON.SET refill:1770056296.93046 $ '{ "time":1770056296.93046, "time_as_text":"02-Feb-2026 12:18:16", "liters":51, "level":17 }'
+ZADD refills 1770056296.93046 refill:1770056296.93046
+
+JSON.SET measurement:1770056296.93046 $ '{ "time":1770056296.93046, "time_as_text":"02-Feb-2026 12:18:16", "temperature":32, "level":17, "liters":51 }'
+ZADD measurements 1770056296.93046 measurement:1770056296.93046
 
 # Data I want to store
 tank {
@@ -106,7 +114,7 @@ tank {
 refills [
     refill {
         "time": 1769228195,
-        "time_as_text": "20-Jan-2026 10:00:00": 
+        "time_as_text": "20-Jan-2026 10:00:00", 
         "liters": 120,
         "level": 40,
     }
@@ -121,3 +129,11 @@ measurements [
         "liters": 210
     }
 ]
+
+# How to run the service
+```
+sudo systemctl enable gas-measurement
+sudo systemctl start gas-measurement
+sudo systemctl stop gas-measurement
+sudo systemctl disable gas-measurement
+```

@@ -1,13 +1,113 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>My App</title>
-        <link rel="stylesheet" href="/static/style.css">
-    </head>
-    <body>
-        <div class="card">
-            <h1>Hello {{ username }}</h1>
-            <p>Current temperature: {{ temperature }}°C</p>
-        </div>
-    </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gas Monitoring Dashboard</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen p-6">
+
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Header -->
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">💨 Gas Monitoring Dashboard</h1>
+
+    <!-- Metrics -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+      <!-- Current Gas Level -->
+      <div class="bg-white rounded-xl shadow p-6">
+        <p class="text-base sm:text-3xl text-gray-500">Current Gas Level</p>
+        <p class="text-4xl sm:text-4xl font-bold text-green-600">{{ latest_measurement['liters'] }}L ➟ {{ latest_measurement['level'] }}%</p>
+      </div>
+
+      <!-- Consumption Rate -->
+      <div class="bg-white rounded-xl shadow p-6">
+        <p class="text-base sm:text-3xl text-gray-500">Consumption Rate</p>
+        <p class="text-3xl sm:text-4xl font-bold text-blue-600">{{ average_consumption | round(2) }} L / day</p>
+      </div>
+
+      <!-- Latest Refill -->
+      <div class="bg-white rounded-xl shadow p-6">
+        <p class="text-sm sm:text-3xl text-gray-500">Last Refill</p>
+        <p class="text-2xl sm:text-4xl font-semibold text-gray-600">
+          {{ latest_refill['time_as_text'].split(" ")[0] }}
+        </p>
+      </div>
+
+      <!-- Predicted Empty -->
+      <div class="bg-white rounded-xl shadow p-6">
+        <p class="text-sm sm:text-3xl text-gray-500">Gas Empty On</p>
+        <p class="text-2xl sm:text-4xl font-bold text-red-600">
+          {{ gas_empty_on }}
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Chart -->
+    <div class="bg-white rounded-xl shadow p-6">
+      <h2 class="text-xl sm:text-4xl font-semibold text-gray-700 mb-4">
+        Gas Level Per Day
+      </h2>
+      <canvas id="gasChart" height="120"></canvas>
+    </div>
+
+  </div>
+
+  <script type="application/json" id="gas-labels">
+    {{ labels | tojson }}
+  </script>
+
+  <script type="application/json" id="gas-data">
+    {{ values | tojson }}
+  </script>
+
+  <!-- Chart Script -->
+  <script>
+    const ctx = document.getElementById('gasChart');
+
+    const gasLabels = JSON.parse(
+      document.getElementById("gas-labels").textContent
+    );
+    const gasData = JSON.parse(
+      document.getElementById("gas-data").textContent
+    );
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: gasLabels,
+        datasets: [{
+          label: 'Gas Level (Liters)',
+          data: gasData,
+          borderWidth: 3,
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100
+          }
+        }
+      }
+    });
+  </script>
+
+
+</body>
 </html>
