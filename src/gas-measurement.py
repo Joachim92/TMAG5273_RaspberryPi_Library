@@ -20,6 +20,8 @@ class Period(Enum):
     WEEK = 86400*7,
     MONTH = 86400*30
 
+time_between_measurements = 3600 * 8
+
 sensor = TMAG5273()
 tank_liters = 300
 
@@ -106,7 +108,7 @@ try:
 
         sensor.setOperatingMode(TMAG5273_STANDBY_BY_MODE)
         r.close()
-        time.sleep(3600)
+        time.sleep(time_between_measurements)
 
 except KeyboardInterrupt:
     sensor.setOperatingMode(TMAG5273_STANDBY_BY_MODE)

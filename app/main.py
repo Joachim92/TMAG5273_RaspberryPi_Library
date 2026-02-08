@@ -134,7 +134,7 @@ def home(request: Request):
     average_consumption = calculate_avg_consumption(latest_refill, latest_measurement, Period.SECOND)
     gas_empty_on = when_gas_will_be_empty(latest_measurement['time'], latest_measurement['liters'], average_consumption)
     measurements = get_measurements_since_last_refill(r, latest_refill, latest_measurement)
-    labels = [m["time_as_text"] for m in measurements]
+    labels = [m["time_as_text"][:6] for m in measurements]
     values = [m["level"] for m in measurements]
 
     r.close()

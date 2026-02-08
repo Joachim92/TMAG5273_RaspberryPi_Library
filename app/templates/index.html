@@ -4,11 +4,13 @@
   <meta charset="UTF-8">
   <title>Gas Monitoring Dashboard</title>
 
+  <link rel="stylesheet" href="/static/style.out.css">
+
   <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- <script src="https://cdn.tailwindcss.com"></script> -->
 
   <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
 </head>
 
 <body class="bg-gray-100 min-h-screen p-6">
@@ -70,22 +72,26 @@
   </script>
 
   <!-- Chart Script -->
-  <script>
+  <!-- <script>
+    const MAX_PONTS = 8
+
     const ctx = document.getElementById('gasChart');
 
     const gasLabels = JSON.parse(
       document.getElementById("gas-labels").textContent
     );
+    // gasLabels = gasLabels.slice(-MAX_POINTS)
     const gasData = JSON.parse(
       document.getElementById("gas-data").textContent
     );
+    // gasData = gasData.slice(-MAX_PONTS)
 
     new Chart(ctx, {
       type: 'line',
       data: {
         labels: gasLabels,
         datasets: [{
-          label: 'Gas Level (Liters)',
+          label: 'Gas Level (%)',
           data: gasData,
           borderWidth: 3,
           tension: 0.3,
@@ -101,12 +107,12 @@
         scales: {
           y: {
             beginAtZero: true,
-            max: 100
+            max: 85
           }
         }
       }
     });
-  </script>
+  </script> -->
 
 
 </body>
