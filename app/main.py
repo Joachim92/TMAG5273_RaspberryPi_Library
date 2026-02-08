@@ -82,31 +82,32 @@ def get_latest_measurement(r):
     return latest_measurement
 
 
-def calculate_avg_consumption(latest_refill, latest_measurement, period: Period) -> int:
-    """in mg"""
-    start_time = latest_refill['time']
-    start_level = latest_refill['level']
-    level_diff = start_level - latest_measurement['level']
-    litters_diff = level_to_liters(level_diff)
-    kg_diff = litters_diff * 0.54
-    time_diff_seconds = latest_measurement['time'] - start_time
-    time_diff_period = int(time_diff_seconds / period.value)
-    if time_diff_period == 0:
-        return 0
-    return (kg_diff * 1000 * 1000) / time_diff_period
-
-
 # def calculate_avg_consumption(latest_refill, latest_measurement, period: Period) -> int:
-#     """in mili liters"""
+#     """in mg"""
 #     start_time = latest_refill['time']
 #     start_level = latest_refill['level']
 #     level_diff = start_level - latest_measurement['level']
 #     litters_diff = level_to_liters(level_diff)
+#     kg_diff = litters_diff * 0.54
 #     time_diff_seconds = latest_measurement['time'] - start_time
 #     time_diff_period = int(time_diff_seconds / period.value)
 #     if time_diff_period == 0:
 #         return 0
-#     return (litters_diff * 1000) / time_diff_period
+#     return (kg_diff * 1000 * 1000) / time_diff_period
+
+
+def calculate_avg_consumption(latest_refill, latest_measurement, period: Period) -> int:
+    """in liters"""
+    start_time = latest_refill['time']
+    start_level = latest_refill['level']
+    level_diff = start_level - latest_measurement['level']
+    litters_diff = level_to_liters(level_diff)
+    time_diff_seconds = latest_measurement['time'] - start_time
+    time_diff_period = time_diff_seconds / period.value
+
+    if time_diff_period == 0:
+        return 0
+    return (litters_diff) / time_diff_period
 
 
 def when_gas_will_be_empty(ts, liters, consumption_per_second):
@@ -120,9 +121,14 @@ def when_gas_will_be_empty(ts, liters, consumption_per_second):
 def get_measurements_since_last_refill(r, latest_refill, latest_measurement) -> list:
     measurement_ids = r.zrangebyscore(measurements_set, latest_refill['time'], latest_measurement['time'])
     measurements = []
+    seen_days = set()
+
     for id in measurement_ids:
         measurement = r.json().get(id)
-        measurements.append(measurement)
+        day = datetime.fromtimestamp(measurement['time']).date()
+        if day not in seen_days:
+            seen_days.add(day)
+            measurements.append(measurement)
     return measurements
 
 

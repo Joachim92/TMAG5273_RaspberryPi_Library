@@ -44,3 +44,37 @@ Red flag zone:
      - Leak
      - Inefficient heater
      - Excessive hot water use
+
+# Compile postcss
+npx postcss app/static/style.css -o app/static/style.out.css
+
+# AI Prompt
+I've this project:
+
+    app
+        static
+            style.css
+        templates
+            index.html
+        main.py
+        postcss.config.js
+
+The project is ran with this command 'fastapi dev main.py'
+
+This is the content of 'postcss.config.js'
+
+export default {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  }
+}
+
+main.py has this:
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+in the index.html I've this:
+
+<link rel="stylesheet" href="/static/style.css">
+
+what am I missing to have tailwind loaded? I'm trying to use postcss

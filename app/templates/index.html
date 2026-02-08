@@ -6,11 +6,7 @@
 
   <link rel="stylesheet" href="/static/style.out.css">
 
-  <!-- Tailwind CSS -->
-  <!-- <script src="https://cdn.tailwindcss.com"></script> -->
-
-  <!-- Chart.js -->
-  <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+   <script src="/static/chart.js"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen p-6">
@@ -32,7 +28,7 @@
       <!-- Consumption Rate -->
       <div class="bg-white rounded-xl shadow p-6">
         <p class="text-base sm:text-3xl text-gray-500">Consumption Rate</p>
-        <p class="text-3xl sm:text-4xl font-bold text-blue-600">{{ average_consumption | round(2) }} mg / day</p>
+        <p class="text-3xl sm:text-4xl font-bold text-blue-600">{{ (average_consumption * 3600 * 24) | round(2) }} L / day</p>
       </div>
 
       <!-- Latest Refill -->
@@ -72,19 +68,19 @@
   </script>
 
   <!-- Chart Script -->
-  <!-- <script>
-    const MAX_PONTS = 8
+  <script>
+    const MAX_POINTS = 15
 
     const ctx = document.getElementById('gasChart');
 
-    const gasLabels = JSON.parse(
+    gasLabels = JSON.parse(
       document.getElementById("gas-labels").textContent
     );
     // gasLabels = gasLabels.slice(-MAX_POINTS)
-    const gasData = JSON.parse(
+    gasData = JSON.parse(
       document.getElementById("gas-data").textContent
     );
-    // gasData = gasData.slice(-MAX_PONTS)
+    // gasData = gasData.slice(-MAX_POINTS)
 
     new Chart(ctx, {
       type: 'line',
@@ -100,6 +96,11 @@
       },
       options: {
         plugins: {
+          decimation: {
+            enabled: true,
+            algorithm: 'min-max',
+            samples: 15
+          },
           legend: {
             display: false
           }
@@ -112,7 +113,7 @@
         }
       }
     });
-  </script> -->
+  </script>
 
 
 </body>
